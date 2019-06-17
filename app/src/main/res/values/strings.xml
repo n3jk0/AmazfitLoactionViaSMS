@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Watch_smsSender</string>
+    <string name="sendSMSButton">SMS</string>
+    <string name="statusDone">Done</string>
+    <string name="statusSending">Sending…</string>
+    <string name="statusUpdatingLocation">Location…</string>
+    <string name="locationNotFound">"Couldn't find location!"</string>
+</resources>
