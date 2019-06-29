@@ -1,6 +1,9 @@
 package privatecom.nejc.watch_smssender;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -13,8 +16,12 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import privatecom.nejc.watch_smssender.domain.MyLocation;
 
@@ -55,9 +62,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void getLocationAndSendSMS(View view) {
         locationChanged = false;
-        updateStatusBar(getString(R.string.statusUpdatingLocation));
-        updateLocation();
-        new WaitForLocation().execute();
+//        updateStatusBar(getString(R.string.statusUpdatingLocation));
+//        updateLocation();
+//        new WaitForLocation().execute();
+        findConnectedDevices();
     }
 
     public void updateLocation() {
@@ -88,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
             return "";
         }
         String nearestCity = findNearestCity(location);
-        return String.format("(long: %.3f lat: %.3f)\n", location.getLongitude(), location.getLatitude(), nearestCity);
+        return String.format("(long: %.3f lat: %.3f)\n%s", location.getLongitude(), location.getLatitude(), nearestCity);
     }
 
     private String findNearestCity(Location location) {
@@ -101,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
             double longDist = Math.abs(currLong - entry.getValue().getLongitude());
 
             double currDistance = Math.hypot(latDist, longDist);
+            System.out.println("Entry: " + entry.getKey() + " dist: " + currDistance);
             if (currDistance < minDistance) {
                 nearestCity = entry.getKey();
                 minDistance = currDistance;
@@ -169,6 +178,44 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onProviderDisabled(String provider) {
 
+        }
+    }
+
+    private class SendSMSToPhone extends Thread {
+        private final BluetoothSocket bluetoothSocket;
+        private final InputStream inputStream;
+        private final OutputStream outputStream;
+
+        public SendSMSToPhone(BluetoothSocket socket) {
+            bluetoothSocket = socket;
+
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            try {
+                tmpIn = bluetoothSocket.getInputStream();
+                tmpOut = bluetoothSocket.getOutputStream();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+
+            inputStream = tmpIn;
+            outputStream = tmpOut;
+        }
+
+        public void run() {
+            byte[] buffer = new byte[1024];
+            int bytes;
+
+        }
+    }
+
+    private void findConnectedDevices() {
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+
+        for (BluetoothDevice device : pairedDevices) {
+            System.out.println(device.getName() + " " + device.getAddress());
         }
     }
 }
