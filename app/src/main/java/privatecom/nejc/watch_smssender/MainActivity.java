@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     BluetoothAdapter bluetoothAdapter;
     volatile boolean locationChanged = false;
 
-    private final static String NAME = "bluetooth_sms";
+    private final static String NAME = "123e4567-e89b-12d3-a456-556642440000";
     private final static UUID MY_UUID = UUID.fromString(NAME);
     private final static String TAG = "watch_smssender";
 
@@ -73,7 +73,16 @@ public class MainActivity extends AppCompatActivity {
 //        updateStatusBar(getString(R.string.statusUpdatingLocation));
 //        updateLocation();
 //        new WaitForLocation().execute();
-        findConnectedDevices();
+        BluetoothDevice device = findConnectedDevices();
+        MyBluetoothService bluetoothService = new MyBluetoothService();
+        try {
+//          todo: un-hardcoded UUID
+            BluetoothSocket bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+            bluetoothSocket.connect();
+            bluetoothService.sendTo(bluetoothSocket, "SEND THIS");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void updateLocation() {
@@ -218,13 +227,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void findConnectedDevices() {
+    private BluetoothDevice findConnectedDevices() {
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-
-        for (BluetoothDevice device : pairedDevices) {
+        BluetoothDevice device = pairedDevices.iterator().next();
+        if (device != null) {
             System.out.println(device.getName() + " " + device.getAddress());
         }
+        return device;
+
     }
 
     private class ConnectThread extends Thread {
